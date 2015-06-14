@@ -1,6 +1,6 @@
 # Evented Coroutine Asio
 
-Yet another implementation of Coroutine Asio server implementation.
+Yet another Coroutine Asio server implementation.
 
 ## Binaries
 
