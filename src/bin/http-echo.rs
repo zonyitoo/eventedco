@@ -338,7 +338,7 @@ impl NetworkStream for HttpStream {
     fn close(&mut self, how: Shutdown) -> io::Result<()> {
         #[inline]
         fn shutdown(tcp: &mut TcpStream, how: Shutdown) -> io::Result<()> {
-            use mio::tcp;
+            use eventedco::net::tcp;
             let how = match how {
                 Shutdown::Read => tcp::Shutdown::Read,
                 Shutdown::Write => tcp::Shutdown::Write,

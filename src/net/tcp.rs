@@ -22,12 +22,14 @@
 use std::io;
 use std::net::{ToSocketAddrs, SocketAddr};
 use std::ops::{Deref, DerefMut};
+use std::convert::From;
 
 use mio::{self, Interest};
 use mio::buf::{Buf, MutBuf, MutSliceBuf, SliceBuf};
 
 use processor::Processor;
 
+#[derive(Debug)]
 pub struct TcpSocket(::mio::tcp::TcpSocket);
 
 impl TcpSocket {
@@ -42,9 +44,6 @@ impl TcpSocket {
     }
 
     pub fn connect<A: ToSocketAddrs>(addr: A) -> io::Result<(TcpStream, bool)> {
-        // let (stream, complete) = try!(self.0.connect(addr));
-        // Ok((TcpStream(stream), complete))
-
         super::each_addr(addr, |a| {
             match a {
                 &SocketAddr::V4(..) => try!(TcpSocket::v4()).0.connect(a),
@@ -72,6 +71,7 @@ impl DerefMut for TcpSocket {
     }
 }
 
+#[derive(Debug)]
 pub struct TcpListener(::mio::tcp::TcpListener);
 
 impl TcpListener {
@@ -96,7 +96,7 @@ impl TcpListener {
         }
 
         loop {
-            try!(Processor::current().register(&self.0, Interest::readable()));
+            try!(Processor::current().wait_event(&self.0, Interest::readable()));
 
             match self.0.accept() {
                 Ok(None) => {
@@ -132,14 +132,41 @@ impl DerefMut for TcpListener {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Shutdown {
+    /// Further receptions will be disallowed.
+    Read,
+    /// Further  transmissions will be disallowed.
+    Write,
+    /// Further receptions and transmissions will be disallowed.
+    Both,
+}
+
+impl From<Shutdown> for mio::tcp::Shutdown {
+    fn from(shutdown: Shutdown) -> mio::tcp::Shutdown {
+        match shutdown {
+            Shutdown::Read => mio::tcp::Shutdown::Read,
+            Shutdown::Write => mio::tcp::Shutdown::Write,
+            Shutdown::Both => mio::tcp::Shutdown::Both,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct TcpStream(mio::tcp::TcpStream);
 
 impl TcpStream {
     pub fn connect<A: ToSocketAddrs>(addr: A) -> io::Result<TcpStream> {
-        // let stream = try!(mio::tcp::TcpStream::connect(addr));
+        match TcpSocket::connect(addr) {
+            Ok((stream, completed)) => {
+                if !completed {
+                    try!(Processor::current().wait_event(&stream.0, Interest::writable()));
+                }
 
-        // Ok(TcpStream(stream))
-        super::each_addr(addr, ::mio::tcp::TcpStream::connect).map(TcpStream)
+                Ok(stream)
+            },
+            Err(err) => Err(err)
+        }
     }
 
     pub fn peer_addr(&self) -> io::Result<SocketAddr> {
@@ -154,6 +181,10 @@ impl TcpStream {
         let stream = try!(self.0.try_clone());
 
         Ok(TcpStream(stream))
+    }
+
+    pub fn shutdown(&self, how: Shutdown) -> io::Result<()> {
+        self.0.shutdown(From::from(how))
     }
 }
 
@@ -189,7 +220,7 @@ impl io::Read for TcpStream {
         }
 
         debug!("Read: Going to register event");
-        try!(Processor::current().register(&self.0, Interest::readable()));
+        try!(Processor::current().wait_event(&self.0, Interest::readable()));
         debug!("Read: Got read event");
 
         while buf.has_remaining() {
@@ -249,7 +280,7 @@ impl io::Write for TcpStream {
         }
 
         debug!("Write: Going to register event");
-        try!(Processor::current().register(&self.0, Interest::writable()));
+        try!(Processor::current().wait_event(&self.0, Interest::writable()));
         debug!("Write: Got write event");
 
         while buf.has_remaining() {

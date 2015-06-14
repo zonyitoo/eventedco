@@ -7,8 +7,12 @@ authors = ["Y. T. Chung <zonyitoo@gmail.com>"]
 name = "eventedco"
 
 [[bin]]
-name = "tcp-echo"
-path = "src/bin/tcp-echo.rs"
+name = "tcp-echo-server"
+path = "src/bin/tcp-echo-server.rs"
+
+[[bin]]
+name = "tcp-echo-client"
+path = "src/bin/tcp-echo-client.rs"
 
 [[bin]]
 name = "http-echo"
@@ -22,6 +26,7 @@ env_logger = "*"
 clap = "*"
 hyper = "*"
 openssl = "*"
+rand = "*"
 
 [dependencies.mio]
 git = "https://github.com/carllerche/mio.git"

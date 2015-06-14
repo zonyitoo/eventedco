@@ -59,7 +59,7 @@ impl UdpSocket {
             }
         }
 
-        try!(Processor::current().register(&self.0, Interest::writable()));
+        try!(Processor::current().wait_event(&self.0, Interest::writable()));
 
         match try!(self.0.send_to(buf, target)) {
             None => {
@@ -81,7 +81,7 @@ impl UdpSocket {
             }
         }
 
-        try!(Processor::current().register(&self.0, Interest::readable()));
+        try!(Processor::current().wait_event(&self.0, Interest::readable()));
 
         match try!(self.0.recv_from(buf)) {
             None => {

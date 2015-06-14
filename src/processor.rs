@@ -29,7 +29,7 @@ impl Processor {
 
     #[cfg(any(target_os = "linux",
           target_os = "android"))]
-    pub fn register<E: Evented + ::std::os::unix::io::AsRawFd>(&mut self, io: &E, inst: Interest) -> io::Result<()> {
+    pub fn wait_event<E: Evented + ::std::os::unix::io::AsRawFd>(&mut self, io: &E, inst: Interest) -> io::Result<()> {
         let cur_hdl = Coroutine::current().clone();
         let token = self.handler.slabs.insert((io.as_raw_fd(), cur_hdl)).unwrap();
         try!(self.event_loop.register_opt(io, token, inst, PollOpt::oneshot()));
@@ -43,7 +43,7 @@ impl Processor {
           target_os = "ios",
           target_os = "bitrig",
           target_os = "openbsd"))]
-    pub fn register<E: Evented>(&mut self, io: &E, inst: Interest) -> io::Result<()> {
+    pub fn wait_event<E: Evented>(&mut self, io: &E, inst: Interest) -> io::Result<()> {
         let cur_hdl = Coroutine::current().clone();
         let token = self.handler.slabs.insert(cur_hdl).unwrap();
         try!(self.event_loop.register_opt(io, token, inst, PollOpt::oneshot()));
@@ -52,7 +52,10 @@ impl Processor {
     }
 
     pub fn run(&mut self) -> io::Result<()> {
-        self.event_loop.run(&mut self.handler)
+        while self.handler.slabs.count() != 0 {
+            try!(self.event_loop.run_once(&mut self.handler));
+        }
+        Ok(())
     }
 }
 
