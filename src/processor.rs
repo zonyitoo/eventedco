@@ -120,7 +120,7 @@ impl Handler for IoHandler {
     fn readable(&mut self, event_loop: &mut EventLoop<IoHandler>, token: Token, _: ReadHint) {
         match self.slabs.remove(token) {
             Some((fd, hdl)) => {
-                let io: Io = ::std::convert::From::from(fd);
+                let io: mio::Io = ::std::convert::From::from(fd);
                 event_loop.deregister(&io);
                 ::std::mem::forget(io);
 
@@ -131,10 +131,10 @@ impl Handler for IoHandler {
         }
     }
 
-    fn writable(&mut self, _: &mut EventLoop<IoHandler>, token: Token) {
+    fn writable(&mut self, event_loop: &mut EventLoop<IoHandler>, token: Token) {
         match self.slabs.remove(token) {
             Some((fd, hdl)) => {
-                let io: Io = ::std::convert::From::from(fd);
+                let io: mio::Io = ::std::convert::From::from(fd);
                 event_loop.deregister(&io);
                 ::std::mem::forget(io);
 
