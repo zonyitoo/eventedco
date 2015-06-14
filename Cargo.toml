@@ -10,12 +10,18 @@ name = "eventedco"
 name = "tcp-echo"
 path = "src/bin/tcp-echo.rs"
 
+[[bin]]
+name = "http-echo"
+path = "src/bin/http-echo.rs"
+
 [dependencies]
 #mio = "*"
 coroutine = "*"
 log = "*"
 env_logger = "*"
 clap = "*"
+hyper = "*"
+openssl = "*"
 
 [dependencies.mio]
 git = "https://github.com/carllerche/mio.git"
