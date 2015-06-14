@@ -124,7 +124,7 @@ impl Handler for IoHandler {
         match self.slabs.remove(token) {
             Some((fd, hdl)) => {
                 let io: Io = From::from(fd);
-                event_loop.deregister(&io);
+                event_loop.deregister(&io).unwrap();
                 ::std::mem::forget(io);
 
                 let res = hdl.resume();
@@ -141,7 +141,7 @@ impl Handler for IoHandler {
         match self.slabs.remove(token) {
             Some((fd, hdl)) => {
                 let io: Io = From::from(fd);
-                event_loop.deregister(&io);
+                event_loop.deregister(&io).unwrap();
                 ::std::mem::forget(io);
 
                 let res = hdl.resume();
