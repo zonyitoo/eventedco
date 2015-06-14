@@ -1,9 +1,11 @@
 pub use self::tcp::{TcpListener, TcpStream, TcpSocket};
+pub use self::udp::UdpSocket;
 
 use std::io;
 use std::net::{ToSocketAddrs, SocketAddr};
 
 pub mod tcp;
+pub mod udp;
 
 fn each_addr<A: ToSocketAddrs, F, T>(addr: A, mut f: F) -> io::Result<T>
     where F: FnMut(&SocketAddr) -> io::Result<T>
