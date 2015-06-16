@@ -161,6 +161,7 @@ impl TcpStream {
             Ok((stream, completed)) => {
                 if !completed {
                     try!(Processor::current().wait_event(&stream.0, Interest::writable()));
+                    try!(stream.take_socket_error());
                 }
 
                 Ok(stream)
@@ -185,6 +186,10 @@ impl TcpStream {
 
     pub fn shutdown(&self, how: Shutdown) -> io::Result<()> {
         self.0.shutdown(From::from(how))
+    }
+
+    pub fn take_socket_error(&self) -> io::Result<()> {
+        self.0.take_socket_error()
     }
 }
 

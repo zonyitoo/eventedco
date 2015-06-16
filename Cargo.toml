@@ -6,18 +6,6 @@ authors = ["Y. T. Chung <zonyitoo@gmail.com>"]
 [lib]
 name = "eventedco"
 
-[[bin]]
-name = "tcp-echo-server"
-path = "src/bin/tcp-echo-server.rs"
-
-[[bin]]
-name = "tcp-echo-client"
-path = "src/bin/tcp-echo-client.rs"
-
-[[bin]]
-name = "http-echo"
-path = "src/bin/http-echo.rs"
-
 [dependencies]
 #mio = "*"
 coroutine = "*"
